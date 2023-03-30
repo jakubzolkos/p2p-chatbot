@@ -1,11 +1,12 @@
 import time
 import socket
 import threading
+import sys
 
 class ChatClient:
 
     def __init__(self):
-        
+
         print("\nWelcome to Chat Room\n")
         print("Initialising....\n")
         time.sleep(1)
@@ -14,7 +15,7 @@ class ChatClient:
         self.shost = socket.gethostname()
         self.ip = socket.gethostbyname(self.shost)
         print(self.shost, "(", self.ip, ")\n")
-        self.host = input(str("Enter server address: "))
+        self.host = "127.0.1.1"
         self.name = input(str("\nEnter your name: "))
         self.port = 1234
         print("\nTrying to connect to ", self.host, "(", self.port, ")\n")
@@ -43,19 +44,20 @@ class ChatClient:
 
 
     def send(self):
+        with self.s:
+            while True:
+                try:
+                    message = input()
+                    if message == "[e]":
+                        message = "Left chat room!"
+                        self.s.send(message.encode())
+                        print("\n")
+                        sys.exit(0)
 
-        while True:
-            try:
-                message = input()
-                if message == "[e]":
-                    message = "Left chat room!"
                     self.s.send(message.encode())
-                    print("\n")
-                    break
-                self.s.send(message.encode())
 
-            except:
-                break
+                except:
+                    break
 
 
     def start_chat(self):

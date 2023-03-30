@@ -16,7 +16,7 @@ class ChatRoom:
         self.port = 1234
         self.s.bind((self.host, self.port))
         print(self.host, "(", self.ip, ")\n")
-        self.name = input(str("Enter your name: "))
+        self.name = "Jakub"
 
         self.s.listen(1)
         print("\nWaiting for incoming connections...\n")
@@ -60,15 +60,13 @@ class ChatRoom:
 
 
     def run(self):
-        # create the two threads
+
         listen_thread = threading.Thread(target=self.listen)
         broadcast_thread = threading.Thread(target=self.broadcast)
 
-        # start the threads
         listen_thread.start()
         broadcast_thread.start()
 
-        # wait for the threads to finish
         listen_thread.join()
         broadcast_thread.join()
 

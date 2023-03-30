@@ -2,63 +2,78 @@ import time
 import socket
 import threading
 
-print("\nWelcome to Chat Room\n")
-print("Initialising....\n")
-time.sleep(1)
+class ChatClient:
 
-s = socket.socket()
-shost = socket.gethostname()
-ip = socket.gethostbyname(shost)
-print(shost, "(", ip, ")\n")
-host = input(str("Enter server address: "))
-name = input(str("\nEnter your name: "))
-port = 1234
-print("\nTrying to connect to ", host, "(", port, ")\n")
-time.sleep(1)
-s.connect((host, port))
-print("Connected...\n")
+    def __init__(self):
+        
+        print("\nWelcome to Chat Room\n")
+        print("Initialising....\n")
+        time.sleep(1)
 
-s.send(name.encode())
-s_name = s.recv(1024)
-s_name = s_name.decode()
-print(s_name, "has joined the chat room\nEnter [e] to exit chat room\n")
+        self.s = socket.socket()
+        self.shost = socket.gethostname()
+        self.ip = socket.gethostbyname(self.shost)
+        print(self.shost, "(", self.ip, ")\n")
+        self.host = input(str("Enter server address: "))
+        self.name = input(str("\nEnter your name: "))
+        self.port = 1234
+        print("\nTrying to connect to ", self.host, "(", self.port, ")\n")
+        time.sleep(1)
+        self.s.connect((self.host, self.port))
+        print("Connected...\n")
 
-def receive():
-    while True:
-        try:
-            message = s.recv(1024)
-            if not message:
+        self.s.send(self.name.encode())
+        self.s_name = self.s.recv(1024)
+        self.s_name = self.s_name.decode()
+        print(self.s_name, "has joined the chat room\nEnter [e] to exit chat room\n")
+
+
+    def receive(self):
+
+        while True:
+            try:
+                message = self.s.recv(1024)
+                if not message:
+                    break
+                message = message.decode()
+                print(self.s_name, ":", message)
+
+            except:
                 break
-            message = message.decode()
-            print(s_name, ":", message)
-        except:
-            break
 
-def send():
-    while True:
-        try:
-            message = input()
-            if message == "[e]":
-                message = "Left chat room!"
-                s.send(message.encode())
-                print("\n")
+
+    def send(self):
+
+        while True:
+            try:
+                message = input()
+                if message == "[e]":
+                    message = "Left chat room!"
+                    self.s.send(message.encode())
+                    print("\n")
+                    break
+                self.s.send(message.encode())
+
+            except:
                 break
-            s.send(message.encode())
-        except:
-            break
-
-# create the two threads
-receive_thread = threading.Thread(target=receive)
-send_thread = threading.Thread(target=send)
-
-# start the threads
-receive_thread.start()
-send_thread.start()
-
-# wait for the threads to finish
-receive_thread.join()
-send_thread.join()
 
 
+    def start_chat(self):
+
+        # create the two threads
+        receive_thread = threading.Thread(target=self.receive)
+        send_thread = threading.Thread(target=self.send)
+
+        # start the threads
+        receive_thread.start()
+        send_thread.start()
+
+        # wait for the threads to finish
+        receive_thread.join()
+        send_thread.join()
 
 
+if __name__ == '__main__':
+
+    client = ChatClient()
+    client.start_chat()

@@ -1,5 +1,7 @@
 import socket
 import threading
+import pandas as pd
+import sqlite3
 
 
 class Chat:
@@ -9,7 +11,7 @@ class Chat:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.is_server = False
         self.connections = []
-
+        self.messages = pd.DataFrame(columns=['sender', 'receiver', 'message', 'timestamp'])
 
     def start(self, host='', port=2080):
 
@@ -47,6 +49,9 @@ class Chat:
             else:
                 conn.sendall(message.encode())
 
+            self.messages = self.messages.append({'sender': 'me', 'receiver': 'you', 'message': message, 'timestamp': pd.Timestamp.now()}, ignore_index=True)
+            self.messages.to_sql('messages', sqlite3.connect('messages.db'), if_exists='replace', index=False)
+
 
     def receive(self, conn, sender_conn):
 
@@ -61,6 +66,9 @@ class Chat:
                     if connection != sender_conn:
                         connection.sendall(message.encode())
 
+            self.messages = self.messages.append({'sender': 'you', 'receiver': 'me', 'message': message, 'timestamp': pd.Timestamp.now()}, ignore_index=True)
+            self.messages.to_sql('messages', sqlite3.connect('messages.db'), if_exists='append', index=False)
+
 
 if __name__ == '__main__':
 
@@ -68,12 +76,12 @@ if __name__ == '__main__':
 
     mode = input("Enter 's' to start a server, 'j' to join a server: ")
     if mode == 's':
-        chat.start(host='127.0.1.1', port=2080)
+        chat.start('localhost', 3000)
 
     elif mode == 'j':
         # host = input("Enter server host: ")
         # port = int(input("Enter server port: "))
-        chat.join("127.0.1.1", 2080)
+        chat.join("localhost", 3000)
 
 
     else:

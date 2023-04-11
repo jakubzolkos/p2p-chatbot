@@ -15,7 +15,7 @@ def servertest():
             s = socket.socket(family, socktype, proto)
             try:
                 s.connect(sockaddr)
-                print(sockaddr)
+                print((sockaddr[0], port-1))
             except socket.error:
                 pass
             else:

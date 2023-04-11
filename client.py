@@ -1,6 +1,25 @@
-from socket import AF_INET, socket, SOCK_STREAM
+from socket import AF_INET, SOCK_STREAM
+import socket
 from threading import Thread
 import tkinter
+
+def servertest():
+
+    hostpattern = '127.0.0'
+    hostrange = 255
+    port = 33001
+
+    for i in range(hostrange):
+        args = socket.getaddrinfo(hostpattern + '.' + str(i), port, socket.AF_INET, socket.SOCK_STREAM)
+        for family, socktype, proto, canonname, sockaddr in args:
+            s = socket.socket(family, socktype, proto)
+            try:
+                s.connect(sockaddr)
+                print(sockaddr)
+            except socket.error:
+                pass
+            else:
+                s.close()
 
 
 class Server:
@@ -10,7 +29,7 @@ class Server:
         self.host = host
         self.port = port
         self.buf_size = buf_size
-        self.server = socket(AF_INET, SOCK_STREAM)
+        self.server = socket.socket(AF_INET, SOCK_STREAM)
         self.server.bind((self.host, self.port))
         self.clients = {}
         self.addresses = {}
@@ -31,7 +50,7 @@ class Server:
     def handle_client(self, client):
 
         name = client.recv(self.buf_size).decode("utf8")
-        welcome = f"Hello {name}! Enter {quit} to exit."
+        welcome = f"Hello {name}! Enter {{quit}} to exit."
         client.send(bytes(welcome, "utf8"))
         msg = "%s has joined the chat!" % name
         self.broadcast(bytes(msg, "utf8"))
@@ -60,6 +79,21 @@ class Server:
         self.server.close()
 
 
+    def listen_for_test(self):
+        
+        test_server = socket.socket(AF_INET, SOCK_STREAM)
+        test_server.bind((self.host, self.port + 1))
+        test_server.listen(1)
+
+        while True:
+            client, client_address = test_server.accept()
+            client.close()
+
+    def start_server_thread(self):
+        self.server_thread = Thread(target=self.listen_for_test)
+        self.server_thread.start()
+
+
 class ChatClient:
 
     def __init__(self, host, port):
@@ -69,7 +103,7 @@ class ChatClient:
         self.BUFSIZ = 1024
         self.ADDR = (self.HOST, self.PORT)
 
-        self.client_socket = socket(AF_INET, SOCK_STREAM)
+        self.client_socket = socket.socket(AF_INET, SOCK_STREAM)
         self.client_socket.connect(self.ADDR)
 
         self.top = tkinter.Tk()
@@ -130,8 +164,14 @@ if __name__ == "__main__":
 
     mode = input("Press 's' to start a new server or 'j' to join an existing server: ")
     if mode == 's':
-        server = Server('127.0.0.1')
+        server = Server('127.0.0.2')
+        server.start_server_thread()
         server.start()
 
     elif mode == 'j':
-        chat_client = ChatClient("127.0.0.1", 33000)
+        servertest()
+        host = input("Enter hostname: ")
+        port = int(input("Enter port: "))
+        chat_client = ChatClient(host, port)
+
+

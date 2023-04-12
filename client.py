@@ -2,6 +2,8 @@ from socket import AF_INET, SOCK_STREAM
 import socket
 from threading import Thread
 import tkinter
+import sqlite3
+import pandas as pd
 
 def servertest():
 
@@ -33,6 +35,8 @@ class Server:
         self.server.bind((self.host, self.port))
         self.clients = {}
         self.addresses = {}
+        self.messages = pd.DataFrame(columns=['sender', 'receiver', 'message', 'timestamp'])
+
     
 
     def start(self):
@@ -59,6 +63,9 @@ class Server:
         while True:
             msg = client.recv(self.buf_size)
             if msg != bytes("{quit}", "utf8"):
+                message = msg.decode('utf-8')
+                self.messages = self.messages.append({'sender': name, 'receiver': 'all', 'message': message, 'timestamp': pd.Timestamp.now()}, ignore_index=True)
+                self.messages.to_sql('messages', sqlite3.connect('messages.db'), if_exists='append', index=False)
                 self.broadcast(msg, name+": ")
             else:
                 client.send(bytes("{quit}", "utf8"))
@@ -164,12 +171,12 @@ if __name__ == "__main__":
 
     mode = input("Press 's' to start a new server or 'j' to join an existing server: ")
     if mode == 's':
-        server = Server('127.0.0.2')
+        server = Server('127.0.0.1')
         server.start_server_thread()
         server.start()
 
     elif mode == 'j':
-        servertest()
+       # servertest()
         host = input("Enter hostname: ")
         port = int(input("Enter port: "))
         chat_client = ChatClient(host, port)
